@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="top">
-      <div class="t-l">
+      <!-- <div class="t-l">
         <span class="s1">{{today}}</span>
         <span class="s1">{{week}}</span>
         <span style="border-right:none">
@@ -17,6 +17,12 @@
           <p class="s2">安徽瑞之君科技有限公司</p>
           <p class="s2">联系电话：0551-123456789</p>
         </div>
+      </div>-->
+      <div id="messages">
+        <button id="start_connect" @click="connect_server()" style="margin:20px">连接</button>
+        <button id="stop_connect" @click="dis_connect()">断开连接</button>
+        <input type="text" id="msg_input" />
+        <button id="send_btn" @click="send_msg()">发送</button>
       </div>
     </div>
     <div class="wrap">
@@ -164,6 +170,30 @@
 </template>
 
 <script>
+var url = "ws://118.25.107.28:61614/stomp";
+var destination = "TEST1";
+var client = Stomp.client(url);
+var callbackMSG = function(message) {
+  console.log("message.body:", message.body);
+  if (message.body) {
+    console.log(message.body+"哈哈哈")
+  } else {
+    // alert("got empty message");
+  }
+};
+var connect_callback = function(frame) {
+  client.subscribe(destination, callbackMSG);
+};
+var error_callback = function(error) {
+  // alert(error.headers.message);
+};
+var headers = {
+  login: "admin",
+  passcode: "admin",
+  // additional header
+  "client-id": "my-client-id"
+};
+client.connect(headers, connect_callback, error_callback);
 import liquidFill from "echarts-liquidfill"; //在这里引入
 export default {
   name: "login",
@@ -174,6 +204,9 @@ export default {
     };
   },
   methods: {
+    send_msg(){
+     client.send("TEST1",headers,"哈哈")
+    },
     aaa5() {
       var that = this;
       // 基于准备好的dom，初始化echarts实例
@@ -343,47 +376,42 @@ export default {
       today = mm + "/" + dd;
       this.today = today;
       this.week = weekday;
-    },
-    getinfo() {
-      var clientID = "web-0001";
-      // Activemq中间件地址
-      client = new Messaging.Client("118.25.107.28", 61614, clientID);
-      client.connect({
-        userName: admin,
-        password: admin,
-        // 连接成功
-        onSuccess: onConnect,
-        // 连接出错
-        onFailure: onFailure
-      });
-      client.onConnect = this.onConnect;
-      client.onMessageArrived = this.onMessageArrived;
-    },
-    //建立连接
-    onConnect() {
-      ws_logs("正在建立连接");
-      // 订阅Topic
-      client.subscribe(topic_name);
-    },
-    // 连接失败
-    onFailure(failure) {
-        ws_logs("连接失败");
-        ws_logs(failure.errorMessage);
-    },
-    //监听消息
-    onMessageArrived(message) {
-      ws_logs(message.payloadString);
-      // 如果你传输的是Json数据，在这里就可以进行解析了
-      var json_obj = eval("(" + message.payloadString + ")");
-      if (json_obj.cmd == "1") {
-        // 执行操作
-      }
     }
+    // callbackMSG(message) {
+    //   console.log("message.body:", message.body);
+    //   if (message.body) {
+    //     // alert("got message with body " + message.body)
+    //   } else {
+    //     // alert("got empty message");
+    //   }
+    // },
+    // connect_callback(frame) {
+    //   client.subscribe(destination, callbackMSG);
+    // },
+    // error_callback(error) {
+    //   alert(error.headers.message);
+    // },
+    // getinfo() {
+    //   var url = "ws://118.25.107.28:61614/stomp";
+    //   // var destination = "MessageQueue";
+    //   var destination = "TEST";
+    //   var client = Stomp.client(url);
+    //    var connect_callback=this.callbackMSG(message)
+    //   var connect_callback=this.connect_callback(frame)
+    //   var error_callback=this.error_callback(error)
+    //   var headers = {
+    //     login: "admin",
+    //     passcode: "admin",
+    //     // additional header
+    //     "client-id": "my-client-id"
+    //   };
+    //   client.connect(headers, connect_callback,error_callback);
+    // }
   },
   mounted() {
     this.gettime();
     this.aaa5();
-    this.getinfo();
+    // this.getinfo();
   }
 };
 </script>
